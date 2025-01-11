@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimalist Writing App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&family=Lobster&family=Pacifico&family=Dancing+Script&family=Poppins:wght@300&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+            font-family: 'Arial', sans-serif;
+            position: relative;
+            overflow: hidden;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body.dark-mode {
+            background-color: #222; /* Darker background */
+            color: white;
+        }
+
+        #writing-area {
+            width: 80%;
+            max-width: 800px;
+            height: 60%;
+            padding: 20px;
+            border: none;
+            outline: none;
+            font-size: 2rem;
+            line-height: 1.6;
+            resize: none;
+            overflow: auto; /* Menjaga area untuk digulirkan */
+            -ms-overflow-style: none; /* Untuk Internet Explorer */
+            scrollbar-width: none; /* Untuk Firefox */
+            box-sizing: border-box;
+            background: transparent; /* Membuat background transparan */
+            transition: color 0.3s;
+        }
+
+        #writing-area.dark-mode {
+            color: white; /* Teks tetap berwarna putih pada dark mode */
+        }
+
+        #menu-bar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 250px;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 1);
+            box-shadow: -4px 0px 10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease;
+            opacity: 0;
+            z-index: 1001;
+        }
+
+        #menu-bar.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        #font-selector, #copy-button {
+            font-family: 'Poppins', sans-serif;
+            display: block;
+            margin-left: 10px;
+            padding: 12px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        #font-selector {
+            background-color: #fff;
+        }
+
+        #copy-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #copy-button:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+        }
+
+        #menu-toggle {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            width: 50px;
+            height: 50px;
+            background-color: #333;
+            color: white;
+            font-size: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            opacity: 0; /* Default hidden */
+        }
+
+        #menu-toggle:hover {
+            background-color: #555;
+            transform: scale(1.1);
+        }
+
+        #footer-text {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            color: black;
+            opacity: 0; /* Default hidden */
+            transition: opacity 0.3s ease;
+        }
+
+        /* Gaya untuk tombol saklar dark mode */
+        #dark-mode-toggle {
+            position: relative;
+            display: inline-block;
+            width: 80px;
+            height: 30px;
+        }
+
+        #dark-mode-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        #dark-mode-toggle .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 50px;
+        }
+
+        #dark-mode-toggle .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            border-radius: 50px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+        }
+
+        /* Gaya untuk saklar saat dark mode aktif */
+        input:checked + .slider {
+            background-color: #4CAF50;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(50px);
+        }
+
+        /* Menambahkan tulisan "Dark Mode" pada sisi saklar */
+        #dark-mode-toggle .slider::after {
+            content: "Dark Mode";
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            color: #fff;
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="writing-area" contenteditable="true" placeholder="Start writing here..."></div>
+    <div id="menu-toggle">&#9776;</div>
+    <div id="menu-bar">
+        <select id="font-selector">
+            <option value="Arial">Arial</option>
+            <option value="Georgia">Georgia</option>
+            <option value="Courier New">Courier New</option>
+            <option value="Tahoma">Tahoma</option>
+            <option value="Verdana">Verdana</option>
+            <option value="Times New Roman">Times New Roman</option>
+            <option value="Playfair Display">Playfair Display</option>
+            <option value="Lobster">Lobster</option>
+            <option value="Pacifico">Pacifico</option>
+            <option value="Dancing Script">Dancing Script</option>
+            <option value="Poppins">Poppins</option>
+        </select>
+        <button id="copy-button">Copy Text</button>
+        <!-- Saklar dark mode -->
+        <label id="dark-mode-toggle">
+            <input type="checkbox">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <div id="footer-text">Created by Kamal Ra</div>
+
+    <script>
+        const writingArea = document.getElementById('writing-area');
+        const fontSelector = document.getElementById('font-selector');
+        const copyButton = document.getElementById('copy-button');
+        const menuBar = document.getElementById('menu-bar');
+        const menuToggle = document.getElementById('menu-toggle');
+        const footerText = document.getElementById('footer-text');
+        const darkModeToggle = document.querySelector('#dark-mode-toggle input');
+
+        // Ganti font berdasarkan pilihan
+        fontSelector.addEventListener('change', (event) => {
+            writingArea.style.fontFamily = event.target.value;
+        });
+
+        // Menyalin teks ke clipboard
+        copyButton.addEventListener('click', () => {
+            const range = document.createRange();
+            range.selectNodeContents(writingArea);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            document.execCommand('copy');
+            selection.removeAllRanges();
+            alert('Text copied to clipboard!');
+        });
+
+        // Menampilkan ikon hamburger saat kursor mendekat ke bagian kanan
+        document.body.addEventListener('mousemove', (event) => {
+            const thirdWidth = window.innerWidth / 3; // Sepertiga lebar layar
+            if (event.clientX < thirdWidth && event.clientY < window.innerHeight) {
+                footerText.style.opacity = 1; // Menampilkan footer text
+            } else {
+                footerText.style.opacity = 0; // Menyembunyikan footer text
+            }
+
+            // Hanya menampilkan ikon hamburger ketika kursor mendekat ke sisi kanan
+            if (event.clientX > window.innerWidth - thirdWidth && event.clientY < window.innerHeight) {
+                menuToggle.style.opacity = 1; // Menampilkan ikon hamburger
+            } else {
+                menuToggle.style.opacity = 0; // Menyembunyikan ikon hamburger
+            }
+        });
+
+        // Menampilkan menu bar saat kursor menyentuh ikon hamburger
+        menuToggle.addEventListener('mouseenter', () => {
+            menuBar.classList.add('show'); // Menampilkan menu bar
+        });
+
+        // Menyembunyikan menu bar saat kursor meninggalkan area menu
+        menuBar.addEventListener('mouseleave', () => {
+            menuBar.classList.remove('show');
+        });
+
+        // Fitur dark mode toggle
+        darkModeToggle.addEventListener('change', () => {
+            document.body.classList.toggle('dark-mode');
+            writingArea.classList.toggle('dark-mode');
+        });
+
+        // Saat halaman pertama kali dimuat, periksa apakah dark mode sudah diaktifkan sebelumnya
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.body.classList.add('dark-mode');
+            writingArea.classList.add('dark-mode');
+            darkModeToggle.checked = true;
+        }
+
+        // Menyimpan preferensi dark mode di localStorage
+        window.addEventListener('beforeunload', () => {
+            localStorage.setItem('dark-mode', document.body.classList.contains('dark-mode'));
+        });
+
+        // Menangani mouse wheel untuk menggulirkan konten tanpa scrollbar yang terlihat
+        writingArea.addEventListener('wheel', (event) => {
+            event.preventDefault();
+            writingArea.scrollTop += event.deltaY;
+        });
+    </script>
+</body>
+</html>
